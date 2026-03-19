@@ -4,8 +4,6 @@
 
 Built with Flask + SocketIO + SQLite. My daughter wanted to *see* what AI agents are actually doing — so I asked Claude CLI to build it. It works.
 
-![NorcsiAgent Dashboard](screenshot.png)
-
 ---
 
 ## What it does
