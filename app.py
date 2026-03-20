@@ -8,8 +8,8 @@ import database as db
 import requests as http_requests
 import os
 
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "8474746813:AAG8oRlaJ3vhxHYAfGkZLoqYeWR0Fr1Edqw")
-TELEGRAM_CHAT_ID = "8284235169"
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "8284235169")
 
 def telegram_alert(agent_name, message):
     try:

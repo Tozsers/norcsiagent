@@ -8,4 +8,8 @@ if [ ! -d "venv" ]; then
 fi
 
 echo "NorcsiAgent indul: http://localhost:8700"
+# Telegram token: ~/.sasagent.env fájlból töltjük be
+if [ -f "$HOME/.sasagent.env" ]; then
+    export $(grep -v '^#' "$HOME/.sasagent.env" | xargs)
+fi
 venv/bin/python app.py
