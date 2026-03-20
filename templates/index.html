@@ -486,6 +486,15 @@ async function loadAgents() {
     const evRes = await fetch(`/api/agent/${encodeURIComponent(a.id)}/events`);
     const evs = await evRes.json();
     evs.reverse().forEach(e => appendEventToCard(a.id, e.event_type, e.message, e.timestamp));
+
+    // Utolsó event → live üzenet és ikon visszaállítása
+    if (evs.length > 0) {
+      const last = evs[0]; // legújabb (DESC sorrend)
+      const liveEl = document.getElementById(`live-${eid(a.id)}`);
+      if (liveEl) liveEl.textContent = last.message || '';
+      const icon = document.getElementById(`icon-${eid(a.id)}`);
+      if (icon) icon.textContent = STATE_ICON[last.event_type] || '💬';
+    }
   }
 }
 
