@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NorcsiAgent — Live Demo</title>
+<style>
+:root {
+  --bg: #0d1117;
+  --panel: #161b22;
+  --border: #21262d;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --accent: #58a6ff;
+  --green: #3fb950;
+  --yellow: #d29922;
+  --red: #f85149;
+  --purple: #bc8cff;
+  --orange: #f0883e;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+header {
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.live-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--green); }
+  50% { opacity: .5; box-shadow: 0 0 2px var(--green); }
+}
+header h1 {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--purple);
+  letter-spacing: -.3px;
+}
+.agent-count {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+/* GRID */
+.grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+  padding: 20px;
+  align-content: start;
+}
+
+/* CARD */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: border-color .3s;
+}
+.card.active { border-color: #30363d; }
+.card.running { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(88,166,255,.15); }
+.card.error-state { border-color: var(--red); }
+
+.card-header {
+  padding: 14px 16px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.avatar {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.card-meta { flex: 1; min-width: 0; }
+.card-name { font-weight: 700; font-size: 14px; }
+.card-id { font-size: 11px; color: var(--muted); }
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: .04em;
+}
+.badge-running { background: rgba(88,166,255,.15); color: var(--accent); }
+.badge-done { background: rgba(63,185,80,.12); color: var(--green); }
+.badge-idle { background: rgba(139,148,158,.1); color: var(--muted); }
+.badge-error { background: rgba(248,81,73,.12); color: var(--red); }
+
+/* CURRENT ACTION */
+.current-action {
+  padding: 12px 16px;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+.state-icon { font-size: 16px; flex-shrink: 0; }
+.action-text { color: var(--muted); font-style: italic; }
+.action-text.live { color: var(--text); font-style: normal; }
+.cursor {
+  display: inline-block;
+  width: 2px; height: 13px;
+  background: var(--accent);
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: blink .7s step-end infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* EVENT LOG */
+.event-log {
+  flex: 1;
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 120px;
+  max-height: 170px;
+  overflow: hidden;
+}
+.event-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: fadeIn .4s ease forwards;
+}
+@keyframes fadeIn {
+  to { opacity: 1; transform: none; }
+}
+.ev-time { color: var(--muted); font-size: 11px; flex-shrink: 0; width: 44px; }
+.ev-type {
+  font-size: 10px; font-weight: 700;
+  padding: 1px 6px; border-radius: 4px;
+  flex-shrink: 0;
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.ev-thinking { background: rgba(188,140,255,.15); color: var(--purple); }
+.ev-tool    { background: rgba(88,166,255,.15); color: var(--accent); }
+.ev-result  { background: rgba(63,185,80,.12); color: var(--green); }
+.ev-error   { background: rgba(248,81,73,.12); color: var(--red); }
+.ev-msg { color: var(--muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+/* COMMAND INPUT */
+.card-footer {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+}
+.cmd-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 12px;
+  color: var(--muted);
+  outline: none;
+}
+.cmd-btn {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* BOTTOM BAR */
+.bottombar {
+  border-top: 1px solid var(--border);
+  padding: 10px 24px;
+  display: flex;
+  gap: 24px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.bottombar span { display: flex; align-items: center; gap: 5px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="live-dot"></div>
+  <h1>NorcsiAgent Dashboard</h1>
+  <div class="agent-count" id="agentCount">4 agents</div>
+</header>
+
+<div class="grid" id="grid"></div>
+
+<div class="bottombar">
+  <span>🟢 WebSocket connected</span>
+  <span>📦 SQLite persisted</span>
+  <span>⚡ Zero polling</span>
+  <span>🔧 Send commands per agent</span>
+</div>
+
+<script>
+const AGENTS = [
+  {
+    id: "research", name: "Research Agent", icon: "🔍",
+    color: "#58a6ff", bg: "rgba(88,166,255,.12)",
+    sequence: [
+      { delay: 400,  type: "thinking", icon: "🧠", msg: "Scanning Hacker News for product gaps..." },
+      { delay: 1800, type: "tool_call", icon: "🔍", msg: "hn_search(query=Ask HN: why doesn't exist)" },
+      { delay: 3200, type: "thinking", icon: "🧠", msg: "Filtering results by score and recency..." },
+      { delay: 4600, type: "tool_call", icon: "🔍", msg: "reddit_search(subreddit=SideProject, limit=20)" },
+      { delay: 6200, type: "thinking", icon: "🧠", msg: "Running gap analysis with Gemini..." },
+      { delay: 8500, type: "result",   icon: "✅", msg: "3 high-score gaps found (7, 8, 9/10). Telegram sent." },
+    ]
+  },
+  {
+    id: "writer", name: "Story Agent", icon: "✍️",
+    color: "#bc8cff", bg: "rgba(188,140,255,.12)",
+    sequence: [
+      { delay: 700,  type: "thinking", icon: "🧠", msg: "Analyzing chapter structure..." },
+      { delay: 2100, type: "tool_call", icon: "🔍", msg: "claude_generate(model=haiku, tokens=2048)" },
+      { delay: 4400, type: "thinking", icon: "🧠", msg: "Checking narrative continuity..." },
+      { delay: 5900, type: "tool_call", icon: "🔍", msg: "claude_generate(model=haiku, tokens=1024)" },
+      { delay: 8000, type: "result",   icon: "✅", msg: "Chapter 4 done — 1,847 words. Saved." },
+    ]
+  },
+  {
+    id: "scheduler", name: "Pinterest Scheduler", icon: "📌",
+    color: "#f0883e", bg: "rgba(240,136,62,.12)",
+    sequence: [
+      { delay: 300,  type: "thinking", icon: "🧠", msg: "Loading today's image queue..." },
+      { delay: 1500, type: "tool_call", icon: "🔍", msg: "pinterest_upload(image=batch_01.jpg)" },
+      { delay: 2800, type: "result",   icon: "✅", msg: "12 images uploaded successfully." },
+      { delay: 3400, type: "thinking", icon: "🧠", msg: "Scheduling next batch for 09:00..." },
+      { delay: 4200, type: "result",   icon: "✅", msg: "Done. Next run: tomorrow 09:00." },
+    ]
+  },
+  {
+    id: "monitor", name: "Price Monitor", icon: "💹",
+    color: "#3fb950", bg: "rgba(63,185,80,.12)",
+    sequence: [
+      { delay: 1000, type: "thinking", icon: "🧠", msg: "Fetching listings from 3 marketplaces..." },
+      { delay: 2500, type: "tool_call", icon: "🔍", msg: "scrape(site=marketplace_a, category=GPU)" },
+      { delay: 3800, type: "tool_call", icon: "🔍", msg: "scrape(site=marketplace_b, category=GPU)" },
+      { delay: 5100, type: "thinking", icon: "🧠", msg: "Comparing prices against threshold..." },
+      { delay: 6400, type: "result",   icon: "✅", msg: "RTX 3080 — 2 new listings below target. Alert sent." },
+    ]
+  },
+];
+
+function now() {
+  const d = new Date();
+  return d.getHours().toString().padStart(2,'0') + ':' +
+         d.getMinutes().toString().padStart(2,'0') + ':' +
+         d.getSeconds().toString().padStart(2,'0');
+}
+
+function buildCard(agent) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.id = 'card-' + agent.id;
+  card.innerHTML = `
+    <div class="card-header">
+      <div class="avatar" style="background:${agent.bg}; font-size:18px">${agent.icon}</div>
+      <div class="card-meta">
+        <div class="card-name">${agent.name}</div>
+        <div class="card-id">${agent.id}</div>
+      </div>
+      <div class="badge badge-idle" id="badge-${agent.id}">IDLE</div>
+    </div>
+    <div class="current-action" id="action-${agent.id}">
+      <span class="state-icon">💤</span>
+      <span class="action-text" id="actionText-${agent.id}">Waiting for task...</span>
+    </div>
+    <div class="event-log" id="log-${agent.id}"></div>
+    <div class="card-footer">
+      <input class="cmd-input" placeholder="Send command to ${agent.name}..." readonly>
+      <button class="cmd-btn">Send ▶</button>
+    </div>
+  `;
+  return card;
+}
+
+function addEvent(agentId, type, icon, msg) {
+  const log = document.getElementById('log-' + agentId);
+  const row = document.createElement('div');
+  row.className = 'event-row';
+  const typeClass = {thinking:'ev-thinking', tool_call:'ev-tool', result:'ev-result', error:'ev-error'}[type] || 'ev-tool';
+  const typeLabel = {thinking:'think', tool_call:'tool', result:'result', error:'error'}[type] || type;
+  row.innerHTML = `
+    <span class="ev-time">${now()}</span>
+    <span class="ev-type ${typeClass}">${typeLabel}</span>
+    <span class="ev-msg">${msg}</span>
+  `;
+  log.appendChild(row);
+  // max 5 sorozat
+  while (log.children.length > 5) log.removeChild(log.firstChild);
+}
+
+function updateAction(agentId, icon, msg, live) {
+  const el = document.getElementById('action-' + agentId);
+  el.querySelector('.state-icon').textContent = icon;
+  const txt = el.querySelector('.action-text');
+  txt.className = 'action-text' + (live ? ' live' : '');
+  txt.innerHTML = msg + (live ? '<span class="cursor"></span>' : '');
+}
+
+function setBadge(agentId, status) {
+  const b = document.getElementById('badge-' + agentId);
+  const card = document.getElementById('card-' + agentId);
+  b.className = 'badge';
+  card.className = 'card';
+  if (status === 'running') { b.classList.add('badge-running'); b.textContent = 'RUNNING'; card.classList.add('running'); }
+  else if (status === 'done') { b.classList.add('badge-done'); b.textContent = 'DONE'; }
+  else if (status === 'idle') { b.classList.add('badge-idle'); b.textContent = 'IDLE'; }
+  else if (status === 'error') { b.classList.add('badge-error'); b.textContent = 'ERROR'; card.classList.add('error-state'); }
+}
+
+// Build grid
+const grid = document.getElementById('grid');
+AGENTS.forEach(agent => grid.appendChild(buildCard(agent)));
+
+// Animate each agent
+AGENTS.forEach(agent => {
+  agent.sequence.forEach((step, i) => {
+    setTimeout(() => {
+      const isLast = i === agent.sequence.length - 1;
+      const status = isLast ? (step.type === 'result' ? 'done' : 'error') : 'running';
+      setBadge(agent.id, status);
+      updateAction(agent.id, step.icon, step.msg, !isLast);
+      addEvent(agent.id, step.type, step.icon, step.msg);
+    }, step.delay);
+  });
+});
+
+// Loop after all done
+setTimeout(() => {
+  // reset and replay after 4s pause
+  setTimeout(() => location.reload(), 4000);
+}, Math.max(...AGENTS.map(a => a.sequence[a.sequence.length-1].delay)) + 2000);
+</script>
+</body>
+</html>

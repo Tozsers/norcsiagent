@@ -5,6 +5,23 @@ from flask import Flask, request, jsonify, render_template
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import database as db
+import requests as http_requests
+import os
+
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "8474746813:AAG8oRlaJ3vhxHYAfGkZLoqYeWR0Fr1Edqw")
+TELEGRAM_CHAT_ID = "8284235169"
+
+def telegram_alert(agent_name, message):
+    try:
+        http_requests.post(
+            f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
+            json={"chat_id": TELEGRAM_CHAT_ID,
+                  "text": f"❌ *NorcsiAgent — {agent_name}*\n{message}",
+                  "parse_mode": "Markdown"},
+            timeout=5
+        )
+    except Exception:
+        pass
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'sasagent-secret'
@@ -40,6 +57,9 @@ def receive_event():
         'meta': meta
     }
     socketio.emit('agent_event', payload)
+
+    if event_type == 'error':
+        eventlet.spawn(telegram_alert, name, message)
 
     # Visszaadjuk a pending parancsokat
     commands = db.get_pending_commands(agent_id)

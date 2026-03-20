@@ -19,6 +19,8 @@
   --result:  #58a6ff;
   --error:   #f85149;
   --idle:    #484f58;
+  --purple:  #bc8cff;
+  --orange:  #f0883e;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -40,6 +42,7 @@ header {
   align-items: center;
   gap: 10px;
   position: sticky; top: 0; z-index: 10;
+  flex-shrink: 0;
 }
 header h1 { font-size: 16px; font-weight: 700; flex: 1; }
 .ws-dot {
@@ -48,17 +51,115 @@ header h1 { font-size: 16px; font-weight: 700; flex: 1; }
 }
 .ws-dot.on { background: var(--tool); box-shadow: 0 0 6px var(--tool); }
 .ws-label { font-size: 12px; color: var(--muted); }
-#agent-count { font-size: 12px; color: var(--muted); margin-left: auto; }
+#agent-count { font-size: 12px; color: var(--muted); }
 
-/* ── Grid ── */
-#grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  gap: 16px;
-  padding: 16px;
+/* ── Pending Approvals ── */
+#approvals-panel {
+  display: none;
+  background: #1a1200;
+  border-bottom: 1px solid #3d2e00;
+  padding: 12px 20px;
+  flex-shrink: 0;
+}
+#approvals-panel.visible { display: block; }
+.approvals-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--orange);
+}
+.approvals-count {
+  background: var(--orange);
+  color: #000;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 20px;
+}
+.approval-cards {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.approval-card {
+  background: var(--card);
+  border: 1px solid #3d2e00;
+  border-radius: 10px;
+  padding: 12px 14px;
+  min-width: 320px;
+  max-width: 480px;
   flex: 1;
 }
+.approval-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.approval-agent {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--orange);
+}
+.approval-time { font-size: 10px; color: var(--muted); margin-left: auto; }
+.approval-msg {
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 10px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+.approval-btns { display: flex; gap: 8px; }
+.approve-btn {
+  flex: 1;
+  background: rgba(63,185,80,.15);
+  color: var(--tool);
+  border: 1px solid rgba(63,185,80,.3);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s;
+}
+.approve-btn:hover { background: rgba(63,185,80,.3); }
+.reject-btn {
+  flex: 1;
+  background: rgba(248,81,73,.12);
+  color: var(--error);
+  border: 1px solid rgba(248,81,73,.3);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s;
+}
+.reject-btn:hover { background: rgba(248,81,73,.25); }
 
+/* ── Fő tartalom ── */
+#main-area {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Agent grid ── */
+#grid-wrap {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+}
+#grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 16px;
+  padding: 16px;
+}
 #empty-state {
   grid-column: 1/-1;
   text-align: center;
@@ -78,6 +179,86 @@ header h1 { font-size: 16px; font-weight: 700; flex: 1; }
   margin-top: 8px;
 }
 
+/* ── Live Event Feed sidebar ── */
+#live-feed {
+  width: 320px;
+  flex-shrink: 0;
+  background: var(--card);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.feed-header {
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.feed-live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--tool);
+  box-shadow: 0 0 5px var(--tool);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+#feed-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column-reverse;
+  padding: 6px 0;
+}
+.feed-row {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  padding: 5px 12px;
+  border-bottom: 1px solid rgba(48,54,61,.5);
+  animation: fadeSlide .3s ease;
+}
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+.feed-time { font-size: 10px; color: var(--muted); white-space: nowrap; min-width: 44px; padding-top: 2px; }
+.feed-agent-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+.feed-type-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.dot-thinking { background: var(--thinking); }
+.dot-tool_call { background: var(--tool); }
+.dot-result    { background: var(--accent); }
+.dot-error     { background: var(--error); }
+.dot-info      { background: var(--idle); }
+.dot-approval  { background: var(--orange); }
+.feed-msg {
+  font-size: 11px;
+  color: var(--muted);
+  word-break: break-word;
+  line-height: 1.4;
+  flex: 1;
+}
+.feed-msg strong { color: var(--text); font-weight: 600; }
+
 /* ── Agent kártya ── */
 .agent-card {
   background: var(--card);
@@ -91,8 +272,8 @@ header h1 { font-size: 16px; font-weight: 700; flex: 1; }
 .agent-card.running { border-color: #2d4a2d; }
 .agent-card.error   { border-color: #4a2d2d; }
 .agent-card.done    { border-color: #1d2d4a; }
+.agent-card.approval_needed { border-color: #4a3800; }
 
-/* kártya fejléc */
 .card-header {
   display: flex;
   align-items: center;
@@ -108,12 +289,12 @@ header h1 { font-size: 16px; font-weight: 700; flex: 1; }
   padding: 2px 8px; border-radius: 20px;
   text-transform: uppercase; letter-spacing: .5px;
 }
-.pill-running { background: #0d2d1a; color: var(--tool); }
-.pill-idle    { background: #1a1a1a; color: var(--muted); }
-.pill-done    { background: #0d1e33; color: var(--result); }
-.pill-error   { background: #2d0d0d; color: var(--error); }
+.pill-running          { background: #0d2d1a; color: var(--tool); }
+.pill-idle             { background: #1a1a1a; color: var(--muted); }
+.pill-done             { background: #0d1e33; color: var(--result); }
+.pill-error            { background: #2d0d0d; color: var(--error); }
+.pill-approval_needed  { background: #2d1f00; color: var(--orange); }
 
-/* live üzenet */
 .live-msg {
   padding: 10px 14px;
   min-height: 42px;
@@ -137,11 +318,10 @@ header h1 { font-size: 16px; font-weight: 700; flex: 1; }
 .cursor.active { opacity: 1; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
-/* esemény log */
 .event-log {
   flex: 1;
   overflow-y: auto;
-  max-height: 220px;
+  max-height: 180px;
   padding: 8px 14px;
   display: flex;
   flex-direction: column;
@@ -159,14 +339,14 @@ header h1 { font-size: 16px; font-weight: 700; flex: 1; }
   font-size: 10px; font-weight: 700;
   white-space: nowrap; min-width: 62px; text-align: center;
 }
-.badge-thinking { background: #2d2200; color: var(--thinking); }
+.badge-thinking  { background: #2d2200; color: var(--thinking); }
 .badge-tool_call { background: #0d2d1a; color: var(--tool); }
-.badge-result   { background: #0d1e33; color: var(--result); }
-.badge-error    { background: #2d0d0d; color: var(--error); }
-.badge-info     { background: #1a1a1a; color: var(--muted); }
+.badge-result    { background: #0d1e33; color: var(--result); }
+.badge-error     { background: #2d0d0d; color: var(--error); }
+.badge-info      { background: #1a1a1a; color: var(--muted); }
+.badge-approval  { background: #2d1f00; color: var(--orange); }
 .ev-msg { color: var(--text); word-break: break-word; }
 
-/* parancs panel */
 .cmd-panel {
   display: flex;
   gap: 6px;
@@ -200,8 +380,31 @@ header h1 { font-size: 16px; font-weight: 700; flex: 1; }
   transition: opacity .15s;
 }
 .cmd-btn:hover { opacity: .85; }
+.stop-btn {
+  background: rgba(248,81,73,.15);
+  color: var(--error);
+  border: 1px solid rgba(248,81,73,.3);
+  border-radius: 6px;
+  padding: 6px 9px;
+  font-size: 13px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .15s;
+}
+.stop-btn:hover { background: rgba(248,81,73,.3); }
+.log-btn {
+  background: rgba(139,148,158,.1);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 9px;
+  font-size: 13px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .15s;
+}
+.log-btn:hover { background: rgba(139,148,158,.2); color: var(--text); }
 
-/* scrollbar */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -216,25 +419,47 @@ header h1 { font-size: 16px; font-weight: 700; flex: 1; }
   <span id="agent-count"></span>
 </header>
 
-<div id="grid">
-  <div id="empty-state">
-    Még nincs aktív agent.<br>
-    Integráld az <strong>agent_client.py</strong>-t bármelyik agentedbe:<br>
-    <code>from agent_client import AgentClient</code>
+<!-- Pending Approvals -->
+<div id="approvals-panel">
+  <div class="approvals-header">
+    ⏳ Jóváhagyás szükséges
+    <span class="approvals-count" id="approvals-count">0</span>
+  </div>
+  <div class="approval-cards" id="approval-cards"></div>
+</div>
+
+<!-- Fő terület: grid + live feed -->
+<div id="main-area">
+  <div id="grid-wrap">
+    <div id="grid">
+      <div id="empty-state">
+        Még nincs aktív agent.<br>
+        Integráld az <strong>agent_client.py</strong>-t bármelyik agentedbe:<br>
+        <code>from agent_client import AgentClient</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Event Feed -->
+  <div id="live-feed">
+    <div class="feed-header">
+      <div class="feed-live-dot"></div>
+      Live Event Feed
+    </div>
+    <div id="feed-list"></div>
   </div>
 </div>
 
 <script>
 const socket = io();
-const agents = {};   // id → { name, status, lastType, lastMsg, cardEl }
+const agents = {};
+const AGENT_COLORS = ['#58a6ff','#3fb950','#bc8cff','#f0883e','#d29922','#f85149','#79c0ff','#56d364'];
+const agentColorMap = {};
+let colorIdx = 0;
 
 const STATE_ICON = {
-  thinking: '🧠',
-  tool_call: '🔍',
-  result:   '✅',
-  error:    '❌',
-  info:     '💬',
-  idle:     '💤',
+  thinking: '🧠', tool_call: '🔍', result: '✅',
+  error: '❌', info: '💬', idle: '💤', approval: '⏳',
 };
 
 // ── WebSocket ──
@@ -247,7 +472,6 @@ socket.on('disconnect', () => {
   document.getElementById('ws-dot').classList.remove('on');
   document.getElementById('ws-label').textContent = 'megszakadt';
 });
-
 socket.on('agent_event', ev => handleEvent(ev));
 socket.on('command_queued', d => {
   appendEventToCard(d.agent_id, 'info', `⌨ Parancs: ${d.command}`, new Date().toISOString());
@@ -270,6 +494,94 @@ function handleEvent(ev) {
   ensureCard(ev.agent_id, ev.name, ev.status);
   updateCardState(ev.agent_id, ev.type, ev.message, ev.status);
   appendEventToCard(ev.agent_id, ev.type, ev.message, new Date().toISOString());
+  appendToFeed(ev.agent_id, ev.name, ev.type, ev.message);
+
+  if (ev.type === 'approval' || ev.status === 'approval_needed') {
+    addApprovalCard(ev.agent_id, ev.name, ev.message);
+  }
+}
+
+// ── Agent színek ──
+function agentColor(id) {
+  if (!agentColorMap[id]) {
+    agentColorMap[id] = AGENT_COLORS[colorIdx % AGENT_COLORS.length];
+    colorIdx++;
+  }
+  return agentColorMap[id];
+}
+
+// ── Live Feed ──
+function appendToFeed(agentId, agentName, type, message) {
+  const feed = document.getElementById('feed-list');
+  const now = new Date();
+  const t = now.toTimeString().substring(0,8);
+  const color = agentColor(agentId);
+  const dotClass = `dot-${type}` in {'dot-thinking':1,'dot-tool_call':1,'dot-result':1,'dot-error':1,'dot-info':1,'dot-approval':1}
+    ? `dot-${type}` : 'dot-info';
+
+  const row = document.createElement('div');
+  row.className = 'feed-row';
+  row.innerHTML = `
+    <span class="feed-time">${t}</span>
+    <span class="feed-agent-badge" style="background:${color}22;color:${color}">${esc(agentName||agentId)}</span>
+    <div class="feed-type-dot ${dotClass}"></div>
+    <span class="feed-msg">${esc(message||'')}</span>
+  `;
+  feed.prepend(row);
+
+  // max 100 sor
+  while (feed.children.length > 100) feed.removeChild(feed.lastChild);
+}
+
+// ── Pending Approvals ──
+const pendingApprovals = {};
+
+function addApprovalCard(agentId, agentName, message) {
+  const key = `${agentId}_${Date.now()}`;
+  pendingApprovals[key] = { agentId, agentName, message };
+
+  const panel = document.getElementById('approvals-panel');
+  const cards = document.getElementById('approval-cards');
+  panel.classList.add('visible');
+
+  const now = new Date().toTimeString().substring(0,8);
+  const card = document.createElement('div');
+  card.className = 'approval-card';
+  card.id = `appr-${key}`;
+  card.innerHTML = `
+    <div class="approval-card-header">
+      <span class="approval-agent">⏳ ${esc(agentName||agentId)}</span>
+      <span class="approval-time">${now}</span>
+    </div>
+    <div class="approval-msg">${esc(message)}</div>
+    <div class="approval-btns">
+      <button class="approve-btn" onclick="resolveApproval('${key}','approve')">✅ Jóváhagyás</button>
+      <button class="reject-btn"  onclick="resolveApproval('${key}','reject')">❌ Elutasítás</button>
+    </div>
+  `;
+  cards.appendChild(card);
+  updateApprovalCount();
+}
+
+async function resolveApproval(key, decision) {
+  const a = pendingApprovals[key];
+  if (!a) return;
+  const cmd = decision === 'approve' ? '__APPROVE__' : '__REJECT__';
+  await fetch(`/api/agent/${encodeURIComponent(a.agentId)}/command`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ command: cmd })
+  });
+  document.getElementById(`appr-${key}`)?.remove();
+  delete pendingApprovals[key];
+  updateApprovalCount();
+}
+
+function updateApprovalCount() {
+  const n = Object.keys(pendingApprovals).length;
+  document.getElementById('approvals-count').textContent = n;
+  const panel = document.getElementById('approvals-panel');
+  if (n === 0) panel.classList.remove('visible');
 }
 
 // ── Kártya létrehozás ──
@@ -299,6 +611,8 @@ function ensureCard(id, name, status) {
              placeholder="Parancs → ${esc(name)}..."
              onkeydown="if(event.key==='Enter') sendCmd('${eid(id)}','${esc(id)}')">
       <button class="cmd-btn" onclick="sendCmd('${eid(id)}','${esc(id)}')">Küld ➤</button>
+      <button class="stop-btn" title="Stop agent" onclick="stopAgent('${esc(id)}')">⏹</button>
+      <button class="log-btn" title="Log letöltés" onclick="downloadLog('${esc(id)}','${esc(name)}')">⬇</button>
     </div>
   `;
 
@@ -314,22 +628,17 @@ function updateCardState(id, type, message, status) {
   a.status = status;
 
   const card = document.getElementById(`card-${CSS.escape(id)}`);
-  if (card) {
-    card.className = `agent-card ${status}`;
-  }
+  if (card) card.className = `agent-card ${status}`;
 
-  // ikon
   const icon = document.getElementById(`icon-${eid(id)}`);
   if (icon) icon.textContent = STATE_ICON[type] || '💬';
 
-  // pill
   const pill = document.getElementById(`pill-${eid(id)}`);
   if (pill) {
     pill.className = `status-pill pill-${status}`;
     pill.textContent = status;
   }
 
-  // live szöveg animáció
   const liveEl = document.getElementById(`live-${eid(id)}`);
   const curEl  = document.getElementById(`cur-${eid(id)}`);
   if (liveEl) {
@@ -339,7 +648,6 @@ function updateCardState(id, type, message, status) {
   }
 }
 
-// Typing effect
 function typeText(el, text, onDone) {
   let i = 0;
   const speed = Math.max(10, Math.min(30, 800 / (text.length || 1)));
@@ -376,6 +684,27 @@ async function sendCmd(eid_safe, agentId) {
     body: JSON.stringify({ command: cmd })
   });
   if (input) input.value = '';
+}
+
+async function stopAgent(agentId) {
+  await fetch(`/api/agent/${encodeURIComponent(agentId)}/command`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ command: '__STOP__' })
+  });
+}
+
+async function downloadLog(agentId, agentName) {
+  const r = await fetch(`/api/agent/${encodeURIComponent(agentId)}/events`);
+  const events = await r.json();
+  const lines = events.map(e =>
+    `[${e.timestamp||''}] [${e.type||''}] ${e.message||''}`
+  ).join('\n');
+  const blob = new Blob([lines], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${agentName}_log.txt`;
+  a.click();
 }
 
 function updateCount() {

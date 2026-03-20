@@ -57,3 +57,7 @@ class AgentClient:
 
     def idle(self):
         return self._send("info", "Várakozás...", status="idle")
+
+    def approval_needed(self, message: str):
+        """Jóváhagyási kérés — megjelenik a dashboardon Approve/Reject gombokkal."""
+        return self._send("approval", message, status="approval_needed")
