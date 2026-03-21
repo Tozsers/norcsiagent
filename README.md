@@ -20,8 +20,8 @@ Built with Flask + SocketIO + SQLite. My daughter wanted to *see* what AI agents
 ## Quickstart
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/sasagent.git
-cd sasagent
+git clone https://github.com/Tozsers/norcsiagent.git
+cd norcsiagent
 ./start.sh
 # open http://localhost:8700
 ```
